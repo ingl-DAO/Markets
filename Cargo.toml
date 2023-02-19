@@ -1,0 +1,47 @@
+[package]
+name = "ingl_markets"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+solana-program = "1.15.2"
+borsh = "0.9.3"
+borsh-derive = "0.9.3"
+mpl-token-metadata = { version = "1.4.3", features = ["no-entrypoint"] }
+num-traits = "0.2.15"
+serde = { version = "1.0.152", features = ["derive"] }
+serde_derive = "1.0.152"
+ingl_macros = { path = "../ingl_macros" }
+bincode = "1.3.3"
+
+[dev-dependencies]
+
+[profile.release]
+overflow-checks = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[package.metadata.x]
+deploy-pubkey = "solana-keygen pubkey ./deploy/keypair.json"
+new-deploy-address = "solana-keygen new -o ./deploy/keypair.json --no-bip39-passphrase --force"
+new-buffer-address = "solana-keygen new -o ./deploy/buffer.json --no-bip39-passphrase --force"
+build-deploy-address = "cargo build-bpf && solana program deploy --program-id ./deploy/keypair.json ./target/deploy/ingl_markets.so -u devnet"
+build-deploy = "cargo build-bpf && solana program deploy ./target/deploy/ingl_markets.so -u devnet"
+buffer-deploy-devnet = "solana program write-buffer --buffer ./deploy/buffer.json ./target/deploy/ingl_markets.so -u devnet"
+build-deploy-address-testnet = "cargo build-bpf && solana program deploy --program-id ./deploy/keypair.json ./target/deploy/ingl_markets.so -u testnet"
+build-deploy-testnet = "cargo build-bpf && solana program deploy ./target/deploy/ingl_markets.so -u testnet"
+build-deploy-address-local = "cargo build-bpf && solana program deploy --program-id ./deploy/keypair.json ./target/deploy/ingl_markets.so -u localhost"
+build-deploy-local = "cargo build-bpf && solana program deploy ./target/deploy/ingl_markets.so -u localhost"
+buffer-deploy-local = "solana program write-buffer --buffer ./deploy/buffer.json ./target/deploy/ingl_markets.so -u localhost"
+#Build and deploy to a buffer address to a local cluster, then set the authority to the pda of the program.
+bdlb = "cargo build-bpf && cargo-x new-buffer-address && cargo-x buffer-deploy-local && python python/buffer_changes.py localhost"
+#Build and deploy to a buffer address to devnet, then set the authority to pda of the program.
+bddb = "cargo build-bpf && cargo-x new-buffer-address && cargo-x buffer-deploy-devnet && python python/buffer_changes.py devnet"
+bda = "cargo-x build-deploy-address"
+bdl = "cargo-x build-deploy-local"
+bdla = "cargo-x build-deploy-address-local"
+nda = "cargo-x new-deploy-address"
+dp = "cargo-x deploy-pubkey"
+bdau = "cargo-x bda && python python/upgrade_authority_changes.py devnet"
