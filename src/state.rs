@@ -1,8 +1,10 @@
-use std::collections::{VecDeque, BTreeMap};
+use std::collections::{BTreeMap, VecDeque};
 
 use bincode::deserialize;
 use serde::{Deserialize, Serialize};
-use solana_program::{pubkey::Pubkey, slot_history::Slot, stake_history::Epoch, rent::Rent, sysvar::Sysvar};
+use solana_program::{
+    pubkey::Pubkey, rent::Rent, slot_history::Slot, stake_history::Epoch, sysvar::Sysvar,
+};
 
 pub enum LogColors {
     Red,
@@ -142,6 +144,8 @@ pub struct VoteState0_23_5 {
     pub commission: u8,
     // OTHER FIELDS OMITTED INORDER TO DESERIALIZE ON THE STACK.
 }
+
+pub type LogLevel = u8;
 
 const MAX_ITEMS: usize = 32;
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]

@@ -8,25 +8,23 @@ use solana_program::{
     system_instruction, sysvar,
 };
 
-use crate::state::{VoteInit, VoteAuthorize, VoteState};
+use crate::state::{LogLevel, VoteAuthorize, VoteInit, VoteState};
 
 #[derive(BorshSerialize, BorshDeserialize)]
 pub enum InstructionEnum {
-    List,
-    Delist,
-    Buy,
-    WithdrawRewards,
-    RequestMediation,
-    Mediate,
-    ValidateSecondaryItemsTransfers,
-
+    List { log_level: LogLevel },
+    Delist { log_level: LogLevel },
+    Buy { log_level: LogLevel },
+    WithdrawRewards { log_level: LogLevel },
+    RequestMediation { log_level: LogLevel },
+    Mediate { log_level: LogLevel },
+    ValidateSecondaryItemsTransfers { log_level: LogLevel },
 }
 impl InstructionEnum {
     pub fn decode(data: &[u8]) -> Self {
         try_from_slice_unchecked(data).expect("Failed during the Desrialization of InstructionEnum")
     }
 }
-
 
 #[derive(Serialize, Deserialize)]
 pub enum VoteInstruction {
