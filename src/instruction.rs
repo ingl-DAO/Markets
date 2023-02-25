@@ -8,17 +8,51 @@ use solana_program::{
     system_instruction, sysvar,
 };
 
-use crate::state::{LogLevel, VoteAuthorize, VoteInit, VoteState};
+use crate::state::{LogLevel, StoredSecondaryItem, VoteAuthorize, VoteInit, VoteState};
+
+#[derive(BorshSerialize, BorshDeserialize)]
+pub struct SecondaryItem {
+    cost: u64,
+    name: String,
+    description: String,
+}
+impl SecondaryItem {
+    pub fn to_stored(&self) -> StoredSecondaryItem {
+        StoredSecondaryItem {
+            cost: self.cost,
+            name: self.name.clone(),
+            description: self.description.clone(),
+            date_validated: None,
+        }
+    }
+}
 
 #[derive(BorshSerialize, BorshDeserialize)]
 pub enum InstructionEnum {
-    List { log_level: LogLevel },
-    Delist { log_level: LogLevel },
-    Buy { log_level: LogLevel },
-    WithdrawRewards { log_level: LogLevel },
-    RequestMediation { log_level: LogLevel },
-    Mediate { log_level: LogLevel },
-    ValidateSecondaryItemsTransfers { log_level: LogLevel },
+    List {
+        log_level: LogLevel,
+        authorized_withdrawer_cost: u64,
+        secondary_items: Vec<SecondaryItem>,
+        description: String,
+    },
+    Delist {
+        log_level: LogLevel,
+    },
+    Buy {
+        log_level: LogLevel,
+    },
+    WithdrawRewards {
+        log_level: LogLevel,
+    },
+    RequestMediation {
+        log_level: LogLevel,
+    },
+    Mediate {
+        log_level: LogLevel,
+    },
+    ValidateSecondaryItemsTransfers {
+        log_level: LogLevel,
+    },
 }
 impl InstructionEnum {
     pub fn decode(data: &[u8]) -> Self {

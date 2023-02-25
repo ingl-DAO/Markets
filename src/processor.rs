@@ -19,7 +19,20 @@ pub fn process_instruction(
     let instruction = InstructionEnum::decode(data);
 
     match instruction {
-        InstructionEnum::List { log_level } => list_validator(program_id, accounts, log_level)?,
+        InstructionEnum::List {
+            log_level,
+            authorized_withdrawer_cost,
+            secondary_items,
+            description,
+        } => list_validator(
+            program_id,
+            accounts,
+            authorized_withdrawer_cost,
+            secondary_items,
+            description,
+            log_level,
+            false,
+        )?,
         InstructionEnum::Delist { log_level } => delist_validator(program_id, accounts, log_level)?,
         InstructionEnum::Buy { log_level } => buy_validator(program_id, accounts, log_level)?,
         InstructionEnum::WithdrawRewards { log_level } => {

@@ -1,10 +1,86 @@
-use std::collections::{BTreeMap, VecDeque};
-
+#![allow(unused_parens)]
+use crate::{
+    colored_log,
+    error::InglError,
+    utils::{AccountInfoHelpers, ResultExt},
+};
 use bincode::deserialize;
+use borsh::{BorshDeserialize, BorshSerialize};
+use ingl_macros::Validate;
 use serde::{Deserialize, Serialize};
 use solana_program::{
+    account_info::AccountInfo, borsh::try_from_slice_unchecked, program_error::ProgramError,
     pubkey::Pubkey, rent::Rent, slot_history::Slot, stake_history::Epoch, sysvar::Sysvar,
 };
+use std::collections::{BTreeMap, VecDeque};
+
+use crate::state::LogColors::*;
+
+pub mod consts {
+    pub const PDA_AUTHORIZED_WITHDRAWER_SEED: &[u8] = b"authorized_withdrawer";
+    pub const PROGRAM_STORAGE_SEED: &[u8] = b"program_storage";
+    pub const PDA_UPGRADE_AUTHORITY_SEED: &[u8] = b"upgrade_authority";
+
+    pub const STORAGE_VALIDATION_PHRASE: u32 = 838_927_652;
+}
+
+const LOG_LEVEL: u8 = 5;
+
+#[derive(BorshDeserialize, BorshSerialize, Debug, Validate)]
+#[validation_phrase(crate::state::consts::STORAGE_VALIDATION_PHRASE)]
+pub struct Storage {
+    pub validation_phrase: u32,
+    pub authorized_withdrawer: Pubkey,
+    pub vote_account: Pubkey,
+    pub authorized_withdrawer_cost: u64,
+    pub secondary_items: Vec<StoredSecondaryItem>,
+    pub description: String,
+    pub purchase: Option<Purchase>,
+}
+
+impl Storage {
+    pub fn get_space(&self) -> usize {
+        4 + 32
+            + 32
+            + 8
+            + 4
+            + self
+                .secondary_items
+                .iter()
+                .map(|x| x.get_space())
+                .sum::<usize>()
+            + 4
+            + self.description.len()
+            + 1
+            + Purchase::get_space()
+    }
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+pub struct Purchase {
+    pub buyer: Pubkey,
+    pub date: u32,
+}
+
+impl Purchase {
+    pub fn get_space() -> usize {
+        32 + 4
+    }
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+pub struct StoredSecondaryItem {
+    pub cost: u64,
+    pub name: String,
+    pub description: String,
+    pub date_validated: Option<u32>,
+}
+
+impl StoredSecondaryItem {
+    pub fn get_space(&self) -> usize {
+        8 + self.name.len() + 4 + self.description.len() + 4 + 5
+    }
+}
 
 pub enum LogColors {
     Red,
@@ -55,8 +131,8 @@ impl VoteState {
         Rent::get().unwrap().minimum_balance(Self::space())
     }
     pub fn deserialize(input: &[u8]) -> Box<Self> {
-        let collected = deserialize::<VoteStateVersions>(input).unwrap();
-        Box::new(collected.convert_to_current())
+        let collected = Box::new(deserialize::<VoteStateVersions>(input).unwrap());
+        collected.convert_to_current()
     }
 }
 
@@ -94,13 +170,13 @@ pub enum VoteStateVersions {
 }
 
 impl VoteStateVersions {
-    pub fn convert_to_current(self) -> VoteState {
+    pub fn convert_to_current(self) -> Box<VoteState> {
         match self {
             VoteStateVersions::V0_23_5(state) => {
                 let authorized_voters =
                     AuthorizedVoters::new(state.authorized_voter_epoch, state.authorized_voter);
 
-                VoteState {
+                Box::new(VoteState {
                     node_pubkey: state.node_pubkey,
 
                     /// the signer for withdrawals
@@ -116,9 +192,9 @@ impl VoteStateVersions {
 
                     /// the signer for vote transactions
                     authorized_voters,
-                }
+                })
             }
-            VoteStateVersions::Current(state) => *state,
+            VoteStateVersions::Current(state) => state,
         }
     }
 }
