@@ -17,11 +17,20 @@ use std::collections::{BTreeMap, VecDeque};
 use crate::state::LogColors::*;
 
 pub mod consts {
+    use solana_program::pubkey;
+    use solana_program::pubkey::Pubkey;
+
     pub const PDA_AUTHORIZED_WITHDRAWER_SEED: &[u8] = b"authorized_withdrawer";
     pub const PROGRAM_STORAGE_SEED: &[u8] = b"program_storage";
     pub const PDA_UPGRADE_AUTHORITY_SEED: &[u8] = b"upgrade_authority";
+    pub const ESCROW_ACCOUNT_SEED: &[u8] = b"escrow_account";
+
+    pub const ESCROWED_BASIS_POINTS: u16 = 2000;
+    pub const TEAM_FEES_BASIS_POINTS: u16 = 10;
 
     pub const STORAGE_VALIDATION_PHRASE: u32 = 838_927_652;
+
+    pub const TEAM_ADDRESS: Pubkey = pubkey!("Et2tm6NsfBZJbEYXtWTv9k51V4tWtQvufexSgXoDRGVA");
 }
 
 const LOG_LEVEL: u8 = 5;
@@ -274,4 +283,13 @@ pub enum UpgradeableLoaderState {
                                                    // The raw program data follows this serialized structure in the
                                                    // account's data.
     },
+}
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+    #[test]
+    fn test_escrow_and_team_fee() {
+        assert!(consts::ESCROWED_BASIS_POINTS + consts::TEAM_FEES_BASIS_POINTS <= 10000)
+    }
 }
