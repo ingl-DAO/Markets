@@ -45,8 +45,11 @@ pub fn process_instruction(
             request_mediation(program_id, accounts, log_level, false)?
         }
         InstructionEnum::Mediate { log_level } => mediate(program_id, accounts, log_level)?,
-        InstructionEnum::ValidateSecondaryItemsTransfers { log_level } => {
-            validate_secondary_items_transfers(program_id, accounts, log_level)?
+        InstructionEnum::ValidateSecondaryItemsTransfers {
+            item_index,
+            log_level,
+        } => {
+            validate_secondary_items_transfers(program_id, accounts, log_level, item_index, false)?
         }
     }
 

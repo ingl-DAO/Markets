@@ -52,6 +52,7 @@ pub enum InstructionEnum {
         log_level: LogLevel,
     },
     ValidateSecondaryItemsTransfers {
+        item_index: u32,
         log_level: LogLevel,
     },
 }
