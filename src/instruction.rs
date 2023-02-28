@@ -32,6 +32,7 @@ pub enum InstructionEnum {
     List {
         log_level: LogLevel,
         authorized_withdrawer_cost: u64,
+        mediatable_date: u32,
         secondary_items: Vec<SecondaryItem>,
         description: String,
     },

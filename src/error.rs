@@ -34,4 +34,7 @@ pub enum InglError {
 
     #[err("Invalid Data")]
     InvalidData,
+
+    #[err("A transaction with an unauthorized signer was attempted.")]
+    NotAuthorized,
 }

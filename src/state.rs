@@ -42,9 +42,11 @@ pub struct Storage {
     pub authorized_withdrawer: Pubkey,
     pub vote_account: Pubkey,
     pub authorized_withdrawer_cost: u64,
+    pub mediatable_date: u32,
+    pub purchase: Option<Purchase>,
+    pub request_mediation_date: Option<u32>,
     pub secondary_items: Vec<StoredSecondaryItem>,
     pub description: String,
-    pub purchase: Option<Purchase>,
 }
 
 impl Storage {
@@ -52,6 +54,10 @@ impl Storage {
         4 + 32
             + 32
             + 8
+            + 1
+            + Purchase::get_space()
+            + 1
+            + 4
             + 4
             + self
                 .secondary_items
@@ -60,12 +66,10 @@ impl Storage {
                 .sum::<usize>()
             + 4
             + self.description.len()
-            + 1
-            + Purchase::get_space()
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug)]
 pub struct Purchase {
     pub buyer: Pubkey,
     pub date: u32,

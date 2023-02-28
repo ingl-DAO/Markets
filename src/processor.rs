@@ -22,6 +22,7 @@ pub fn process_instruction(
         InstructionEnum::List {
             log_level,
             authorized_withdrawer_cost,
+            mediatable_date,
             secondary_items,
             description,
         } => list_validator(
@@ -31,6 +32,8 @@ pub fn process_instruction(
             secondary_items,
             description,
             log_level,
+            mediatable_date,
+            false,
             false,
         )?,
         InstructionEnum::Delist { log_level } => delist_validator(program_id, accounts, log_level)?,
@@ -39,7 +42,7 @@ pub fn process_instruction(
             withdraw_rewards(program_id, accounts, log_level)?
         }
         InstructionEnum::RequestMediation { log_level } => {
-            request_mediation(program_id, accounts, log_level)?
+            request_mediation(program_id, accounts, log_level, false)?
         }
         InstructionEnum::Mediate { log_level } => mediate(program_id, accounts, log_level)?,
         InstructionEnum::ValidateSecondaryItemsTransfers { log_level } => {

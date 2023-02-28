@@ -10,7 +10,9 @@ use solana_program::{
 };
 
 use crate::{
+    error::InglError,
     instruction::{vote_authorize, SecondaryItem},
+    log,
     state::{
         consts::{
             PDA_AUTHORIZED_WITHDRAWER_SEED, PDA_UPGRADE_AUTHORITY_SEED, PROGRAM_STORAGE_SEED,
@@ -18,7 +20,7 @@ use crate::{
         },
         LogLevel, Storage, VoteAuthorize, VoteState,
     },
-    utils::{get_rent_data, AccountInfoHelpers, ResultExt}, log,
+    utils::{get_clock_data, get_rent_data, AccountInfoHelpers, ResultExt},
 };
 
 pub fn list_validator(
@@ -28,7 +30,9 @@ pub fn list_validator(
     secondary_items: Vec<SecondaryItem>,
     description: String,
     log_level: LogLevel,
+    mediatable_date: u32,
     rent_is_from_account: bool,
+    clock_is_from_account: bool,
 ) -> ProgramResult {
     log!(log_level, 4, "list_validator called");
     let account_info_iter = &mut accounts.iter();
@@ -43,8 +47,17 @@ pub fn list_validator(
     let sysvar_clock_account_info = next_account_info(account_info_iter)?;
 
     let rent_data = get_rent_data(account_info_iter, rent_is_from_account)?;
+    let clock_data = get_clock_data(account_info_iter, clock_is_from_account)?;
 
-    log!(log_level, 2, "list_validator: verify_and_change_program_authority");
+    if mediatable_date > (clock_data.unix_timestamp + 30 * 86400) as u32 {
+        Err(InglError::TooLate.utilize("Mediatable date can't be more than 30 days in the future"))?
+    }
+
+    log!(
+        log_level,
+        2,
+        "list_validator: verify_and_change_program_authority"
+    );
     verify_and_change_program_authority(
         program_id,
         current_upgrade_authority_info,
@@ -53,7 +66,11 @@ pub fn list_validator(
         this_program_data_account_info,
     )?;
 
-    log!(log_level, 2, "list_validator: verify_and_change_authorized_withdrawer");
+    log!(
+        log_level,
+        2,
+        "list_validator: verify_and_change_authorized_withdrawer"
+    );
     verify_and_change_authorized_withdrawer(
         program_id,
         vote_account_info,
@@ -62,7 +79,11 @@ pub fn list_validator(
         sysvar_clock_account_info,
     )?;
 
-    log!(log_level, 2, "list_validator: create_storage_and_store_data");
+    log!(
+        log_level,
+        2,
+        "list_validator: create_storage_and_store_data"
+    );
     create_storage_and_store_data(
         program_id,
         storage_account_info,
@@ -71,6 +92,7 @@ pub fn list_validator(
         authorized_withdrawer_cost,
         secondary_items,
         description,
+        mediatable_date,
         rent_data,
     )?;
 
@@ -85,6 +107,7 @@ pub fn create_storage_and_store_data<'a>(
     cost: u64,
     secondary_items: Vec<SecondaryItem>,
     description: String,
+    mediatable_date: u32,
     rent_data: Rent,
 ) -> ProgramResult {
     storage_account
@@ -96,13 +119,16 @@ pub fn create_storage_and_store_data<'a>(
         authorized_withdrawer: *payer_account.key,
         vote_account: *vote_account.key,
         authorized_withdrawer_cost: cost,
+        request_mediation_date: None,
         secondary_items: secondary_items
             .iter()
             .map(|item| item.to_stored())
             .collect(),
         description: description,
         purchase: None,
+        mediatable_date,
     };
+
     let space = storage_data.get_space();
     let lamports = rent_data.minimum_balance(space);
     invoke(
