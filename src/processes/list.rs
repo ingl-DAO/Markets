@@ -6,19 +6,20 @@ use solana_program::{
     program::invoke,
     pubkey::Pubkey,
     rent::Rent,
-    system_instruction, sysvar, vote,
+    system_instruction, sysvar,
+    vote::{self, instruction::authorize, state::VoteAuthorize},
 };
 
 use crate::{
     error::InglError,
-    instruction::{vote_authorize, SecondaryItem},
+    instruction::SecondaryItem,
     log,
     state::{
         consts::{
             PDA_AUTHORIZED_WITHDRAWER_SEED, PDA_UPGRADE_AUTHORITY_SEED, PROGRAM_STORAGE_SEED,
             STORAGE_VALIDATION_PHRASE,
         },
-        LogLevel, Storage, VoteAuthorize, VoteState,
+        LogLevel, Storage, VoteState,
     },
     utils::{get_clock_data, get_rent_data, AccountInfoHelpers, ResultExt},
 };
@@ -120,6 +121,8 @@ pub fn create_storage_and_store_data<'a>(
         vote_account: *vote_account.key,
         authorized_withdrawer_cost: cost,
         request_mediation_date: None,
+        mediation_date: None,
+        mediation_shares: None,
         secondary_items: secondary_items
             .iter()
             .map(|item| item.to_stored())
@@ -176,7 +179,7 @@ pub fn verify_and_change_authorized_withdrawer<'a>(
         .error_log("Error @ pda_authorized_withdrawer_info.assert_seed")?;
 
     invoke(
-        &vote_authorize(
+        &authorize(
             &vote_account.key,
             &current_authorized_withdrawer.key,
             &pda_authorized_withdrawer.key,

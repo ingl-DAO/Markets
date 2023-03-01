@@ -1,4 +1,3 @@
-use borsh::BorshDeserialize;
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
 
 use crate::{
@@ -44,7 +43,10 @@ pub fn process_instruction(
         InstructionEnum::RequestMediation { log_level } => {
             request_mediation(program_id, accounts, log_level, false)?
         }
-        InstructionEnum::Mediate { log_level } => mediate(program_id, accounts, log_level)?,
+        InstructionEnum::Mediate {
+            log_level,
+            mediation_shares,
+        } => mediate(program_id, accounts, mediation_shares, log_level, false)?,
         InstructionEnum::ValidateSecondaryItemsTransfers {
             item_index,
             log_level,

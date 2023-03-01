@@ -5,18 +5,18 @@ use solana_program::{
     entrypoint::ProgramResult,
     program::{invoke, invoke_signed},
     pubkey::Pubkey,
-    system_instruction, sysvar, vote,
+    system_instruction, sysvar,
+    vote::{self, instruction::authorize, state::VoteAuthorize},
 };
 
 use crate::{
     error::InglError,
-    instruction::vote_authorize,
     state::{
         consts::{
             ESCROWED_BASIS_POINTS, ESCROW_ACCOUNT_SEED, PDA_AUTHORIZED_WITHDRAWER_SEED,
             PROGRAM_STORAGE_SEED, TEAM_ADDRESS, TEAM_FEES_BASIS_POINTS,
         },
-        LogLevel, Purchase, Storage, VoteAuthorize,
+        LogLevel, Purchase, Storage,
     },
     utils::{get_clock_data_from_account, AccountInfoHelpers, OptionExt, ResultExt},
 };
@@ -71,7 +71,7 @@ pub fn verify_transfer_cost_and_edit_storage<'a>(
     escrow_account: &AccountInfo<'a>,
     team_account: &AccountInfo<'a>,
     clock_data: &Clock,
-    log_level: LogLevel,
+    _log_level: LogLevel,
 ) -> ProgramResult {
     storage_account
         .assert_seed(program_id, &[PROGRAM_STORAGE_SEED])
@@ -92,8 +92,6 @@ pub fn verify_transfer_cost_and_edit_storage<'a>(
     if let Some(_purchase) = storage_data.purchase {
         Err(InglError::TooLate.utilize("Error @ validator is already bought"))?
     }
-
-    if storage_data.secondary_items.is_empty() {}
 
     let secondary_item_cost = storage_data
         .secondary_items
@@ -168,6 +166,11 @@ pub fn verify_transfer_cost_and_edit_storage<'a>(
     storage_data.purchase = Some(Purchase {
         buyer: *payer_account.key,
         date: clock_data.unix_timestamp as u32,
+        date_finalized: if storage_data.secondary_items.is_empty() {
+            Some(clock_data.unix_timestamp as u32)
+        } else {
+            None
+        },
     });
 
     storage_data
@@ -182,7 +185,7 @@ pub fn change_authorized_withdrawer<'a>(
     new_authorized_withdrawer: &AccountInfo<'a>,
     pda_authorized_withdrawer: &AccountInfo<'a>,
     sysvar_clock_account: &AccountInfo<'a>,
-    log_level: LogLevel,
+    _log_level: LogLevel,
 ) -> ProgramResult {
     vote_account
         .assert_owner(&vote::program::ID)
@@ -197,7 +200,7 @@ pub fn change_authorized_withdrawer<'a>(
         .error_log("Error @ pda_authorized_withdrawer_info.assert_seed")?;
 
     invoke_signed(
-        &vote_authorize(
+        &authorize(
             &vote_account.key,
             &pda_authorized_withdrawer.key,
             &new_authorized_withdrawer.key,

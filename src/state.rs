@@ -31,6 +31,7 @@ pub mod consts {
     pub const STORAGE_VALIDATION_PHRASE: u32 = 838_927_652;
 
     pub const TEAM_ADDRESS: Pubkey = pubkey!("Et2tm6NsfBZJbEYXtWTv9k51V4tWtQvufexSgXoDRGVA");
+    pub const MEDIATORS: [Pubkey; 1] = [pubkey!("Et2tm6NsfBZJbEYXtWTv9k51V4tWtQvufexSgXoDRGVA")];
 }
 
 const LOG_LEVEL: u8 = 5;
@@ -45,6 +46,8 @@ pub struct Storage {
     pub mediatable_date: u32,
     pub purchase: Option<Purchase>,
     pub request_mediation_date: Option<u32>,
+    pub mediation_date: Option<u32>,
+    pub mediation_shares: Option<MediationShares>,
     pub secondary_items: Vec<StoredSecondaryItem>,
     pub description: String,
 }
@@ -54,10 +57,12 @@ impl Storage {
         4 + 32
             + 32
             + 8
+            + 4
             + 1
             + Purchase::get_space()
+            + 5
             + 1
-            + 4
+            + MediationShares::get_space()
             + 4
             + self
                 .secondary_items
@@ -69,15 +74,16 @@ impl Storage {
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug)]
+#[derive(BorshSerialize, BorshDeserialize, Copy, Clone, Debug)]
 pub struct Purchase {
     pub buyer: Pubkey,
     pub date: u32,
+    pub date_finalized: Option<u32>,
 }
 
 impl Purchase {
     pub fn get_space() -> usize {
-        32 + 4
+        32 + 4 + 5
     }
 }
 
@@ -109,10 +115,24 @@ pub struct VoteInit {
     pub authorized_withdrawer: Pubkey,
     pub commission: u8,
 }
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-pub enum VoteAuthorize {
-    Voter,
-    Withdrawer,
+
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+pub struct MediationShares {
+    pub buyer: u64,
+    pub seller: u64,
+    pub team: u64,
+}
+
+impl MediationShares {
+    pub fn verify_sum(&self) -> Result<(), ProgramError> {
+        if self.buyer + self.seller + self.team != 100 {
+            Err(InglError::InvalidData.utilize("mediation shares do not sum to 100"))?
+        }
+        Ok(())
+    }
+    pub fn get_space() -> usize {
+        8 + 8 + 8
+    }
 }
 
 #[derive(Deserialize)]

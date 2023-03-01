@@ -4,18 +4,17 @@ use solana_program::{
     entrypoint::ProgramResult,
     program::invoke_signed,
     pubkey::Pubkey,
-    sysvar, vote,
+    sysvar, vote::{self, state::VoteAuthorize, instruction::authorize},
 };
 
 use crate::{
     error::InglError,
-    instruction::vote_authorize,
     log,
     state::{
         consts::{
             PDA_AUTHORIZED_WITHDRAWER_SEED, PDA_UPGRADE_AUTHORITY_SEED, PROGRAM_STORAGE_SEED,
         },
-        LogLevel, Storage, VoteAuthorize,
+        LogLevel, Storage,
     },
     utils::{AccountInfoHelpers, OptionExt, ResultExt},
 };
@@ -37,11 +36,7 @@ pub fn delist_validator(
     let pda_upgrade_authority_info = next_account_info(account_info_iter)?;
     let sysvar_clock_account_info = next_account_info(account_info_iter)?;
 
-    log!(
-        log_level,
-        2,
-        "delist_validator: change_program_authority"
-    );
+    log!(log_level, 2, "delist_validator: change_program_authority");
     change_program_authority(
         program_id,
         current_upgrade_authority_info,
@@ -140,7 +135,7 @@ pub fn change_authorized_withdrawer<'a>(
         .error_log("Error @ pda_authorized_withdrawer_info.assert_seed")?;
 
     invoke_signed(
-        &vote_authorize(
+        &authorize(
             &vote_account.key,
             &pda_authorized_withdrawer.key,
             &authorized_withdrawer.key,
