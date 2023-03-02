@@ -139,7 +139,7 @@ pub fn create_storage_and_store_data<'a>(
             .collect(),
         description: description,
         validator_name: validator_name,
-        validator_logo_url: Some(validator_logo_url),
+        validator_logo_url: validator_logo_url,
         purchase: None,
         mediatable_date,
     };

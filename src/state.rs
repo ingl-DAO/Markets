@@ -51,7 +51,7 @@ pub struct Storage {
     pub secondary_items: Vec<StoredSecondaryItem>,
     pub description: String,
     pub validator_name: String,
-    pub validator_logo_url: Option<String>,
+    pub validator_logo_url: String,
 }
 
 impl Storage {
