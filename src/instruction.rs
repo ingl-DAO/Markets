@@ -28,6 +28,8 @@ pub enum InstructionEnum {
         mediatable_date: u32,
         secondary_items: Vec<SecondaryItem>,
         description: String,
+        validator_name: String,
+        validator_logo_url: String,
     },
     Delist {
         log_level: LogLevel,

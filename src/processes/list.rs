@@ -57,7 +57,7 @@ pub fn list_validator(
     }
 
     if validator_name.is_empty() {
-        Err(InglError::EmptyString.utilize("Validator name can't be empty"))?
+        Err(InglError::InvalidData.utilize("Validator name can't be empty"))?
     }
 
     log!(
