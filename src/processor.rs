@@ -24,6 +24,8 @@ pub fn process_instruction(
             mediatable_date,
             secondary_items,
             description,
+            validator_name,
+            validator_logo_url,
         } => list_validator(
             program_id,
             accounts,
@@ -32,6 +34,8 @@ pub fn process_instruction(
             description,
             log_level,
             mediatable_date,
+            validator_name,
+            validator_logo_url,
             false,
             false,
         )?,

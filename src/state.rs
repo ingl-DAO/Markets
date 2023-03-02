@@ -50,6 +50,8 @@ pub struct Storage {
     pub mediation_shares: Option<MediationShares>,
     pub secondary_items: Vec<StoredSecondaryItem>,
     pub description: String,
+    pub validator_name: String,
+    pub validator_logo_url: Option<String>,
 }
 
 impl Storage {
@@ -71,6 +73,11 @@ impl Storage {
                 .sum::<usize>()
             + 4
             + self.description.len()
+            + 4
+            + self.validator_name.len()
+            + 1
+            + 4
+            + self.validator_logo_url.len()
     }
 }
 

@@ -32,6 +32,8 @@ pub fn list_validator(
     description: String,
     log_level: LogLevel,
     mediatable_date: u32,
+    validator_name: String,
+    validator_logo_url: String,
     rent_is_from_account: bool,
     clock_is_from_account: bool,
 ) -> ProgramResult {
@@ -52,6 +54,10 @@ pub fn list_validator(
 
     if mediatable_date > (clock_data.unix_timestamp + 30 * 86400) as u32 {
         Err(InglError::TooLate.utilize("Mediatable date can't be more than 30 days in the future"))?
+    }
+
+    if validator_name.is_empty() {
+        Err(InglError::EmptyString.utilize("Validator name can't be empty"))?
     }
 
     log!(
@@ -93,6 +99,8 @@ pub fn list_validator(
         authorized_withdrawer_cost,
         secondary_items,
         description,
+        validator_name,
+        validator_logo_url,
         mediatable_date,
         rent_data,
     )?;
@@ -108,6 +116,8 @@ pub fn create_storage_and_store_data<'a>(
     cost: u64,
     secondary_items: Vec<SecondaryItem>,
     description: String,
+    validator_name: String,
+    validator_logo_url: String,
     mediatable_date: u32,
     rent_data: Rent,
 ) -> ProgramResult {
@@ -128,6 +138,8 @@ pub fn create_storage_and_store_data<'a>(
             .map(|item| item.to_stored())
             .collect(),
         description: description,
+        validator_name: validator_name,
+        validator_logo_url: Some(validator_logo_url),
         purchase: None,
         mediatable_date,
     };
