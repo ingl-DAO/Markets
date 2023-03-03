@@ -12,7 +12,7 @@ use solana_program::{
 
 use crate::{
     error::InglError,
-    instruction::SecondaryItem,
+    instruction::{SecondaryItem, register_program_instruction},
     log,
     state::{
         consts::{
@@ -48,6 +48,10 @@ pub fn list_validator(
     let current_upgrade_authority_info = next_account_info(account_info_iter)?;
     let pda_upgrade_authority_info = next_account_info(account_info_iter)?;
     let sysvar_clock_account_info = next_account_info(account_info_iter)?;
+
+    let team_account_info = next_account_info(account_info_iter)?;
+    let registry_storage_account_info = next_account_info(account_info_iter)?;
+    let system_program_info = next_account_info(account_info_iter)?;
 
     let rent_data = get_rent_data(account_info_iter, rent_is_from_account)?;
     let clock_data = get_clock_data(account_info_iter, clock_is_from_account)?;
@@ -103,6 +107,21 @@ pub fn list_validator(
         validator_logo_url,
         mediatable_date,
         rent_data,
+    )?;
+
+    let registry_program_accounts = vec![
+        authorized_withdrawer_info.clone(),
+        this_program_account_info.clone(),
+        team_account_info.clone(),
+        registry_storage_account_info.clone(),
+        // registry_program_config_account.clone(),
+        system_program_info.clone(),
+    ];
+
+    log!(log_level, 2, "Initing Program Registration ... ");
+    invoke(
+        &register_program_instruction(*authorized_withdrawer_info.key, *program_id),
+        &registry_program_accounts,
     )?;
 
     Ok(())

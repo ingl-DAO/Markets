@@ -32,6 +32,12 @@ pub mod consts {
 
     pub const TEAM_ADDRESS: Pubkey = pubkey!("Et2tm6NsfBZJbEYXtWTv9k51V4tWtQvufexSgXoDRGVA");
     pub const MEDIATORS: [Pubkey; 1] = [pubkey!("Et2tm6NsfBZJbEYXtWTv9k51V4tWtQvufexSgXoDRGVA")];
+
+    pub mod program_registry {
+
+        use solana_program::declare_id;
+        declare_id!("38pfsot7kCZkrttx1THEDXEz4JJXmCCcaDoDieRtVuy5");
+    }
 }
 
 const LOG_LEVEL: u8 = 5;
