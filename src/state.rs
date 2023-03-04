@@ -24,6 +24,7 @@ pub mod consts {
     pub const PROGRAM_STORAGE_SEED: &[u8] = b"program_storage";
     pub const PDA_UPGRADE_AUTHORITY_SEED: &[u8] = b"upgrade_authority";
     pub const ESCROW_ACCOUNT_SEED: &[u8] = b"escrow_account";
+    pub const REGISTRY_STORAGE_SEED: &[u8] = b"marketplace_storage";
 
     pub const ESCROWED_BASIS_POINTS: u16 = 2000;
     pub const TEAM_FEES_BASIS_POINTS: u16 = 10;

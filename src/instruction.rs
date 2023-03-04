@@ -6,7 +6,10 @@ use solana_program::{
     system_program,
 };
 
-use crate::state::{consts, LogLevel, MediationShares, StoredSecondaryItem};
+use crate::state::{
+    consts::{self, REGISTRY_STORAGE_SEED},
+    LogLevel, MediationShares, StoredSecondaryItem,
+};
 
 #[derive(BorshSerialize, BorshDeserialize)]
 pub struct SecondaryItem {
@@ -79,7 +82,7 @@ pub fn register_program_instruction(payer: Pubkey, program_id: Pubkey) -> Instru
     // let config_key =
     //     Pubkey::find_program_address(&[b"config"], &constants::program_registry::id()).0;
     let (storage_key, _storage_bump) =
-        Pubkey::find_program_address(&[b"storage"], &consts::program_registry::id());
+        Pubkey::find_program_address(&[REGISTRY_STORAGE_SEED], &consts::program_registry::id());
 
     let accounts = vec![
         AccountMeta::new(payer, true),
