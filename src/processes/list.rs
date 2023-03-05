@@ -12,7 +12,7 @@ use solana_program::{
 
 use crate::{
     error::InglError,
-    instruction::{SecondaryItem, register_program_instruction},
+    instruction::{register_program_instruction, SecondaryItem},
     log,
     state::{
         consts::{
@@ -21,7 +21,7 @@ use crate::{
         },
         LogLevel, Storage, VoteState,
     },
-    utils::{get_clock_data, get_rent_data, AccountInfoHelpers, ResultExt},
+    utils::{get_clock_data_from_account, get_rent_data, AccountInfoHelpers, ResultExt},
 };
 
 pub fn list_validator(
@@ -35,7 +35,6 @@ pub fn list_validator(
     validator_name: String,
     validator_logo_url: String,
     rent_is_from_account: bool,
-    clock_is_from_account: bool,
 ) -> ProgramResult {
     log!(log_level, 4, "list_validator called");
     let account_info_iter = &mut accounts.iter();
@@ -54,7 +53,7 @@ pub fn list_validator(
     let system_program_info = next_account_info(account_info_iter)?;
 
     let rent_data = get_rent_data(account_info_iter, rent_is_from_account)?;
-    let clock_data = get_clock_data(account_info_iter, clock_is_from_account)?;
+    let clock_data = get_clock_data_from_account(sysvar_clock_account_info)?;
 
     if mediatable_date > (clock_data.unix_timestamp + 30 * 86400) as u32 {
         Err(InglError::TooLate.utilize("Mediatable date can't be more than 30 days in the future"))?

@@ -37,7 +37,6 @@ pub fn process_instruction(
             validator_name,
             validator_logo_url,
             false,
-            false,
         )?,
         InstructionEnum::Delist { log_level } => delist_validator(program_id, accounts, log_level)?,
         InstructionEnum::Buy { log_level } => buy_validator(program_id, accounts, log_level)?,
