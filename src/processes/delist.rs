@@ -4,7 +4,8 @@ use solana_program::{
     entrypoint::ProgramResult,
     program::invoke_signed,
     pubkey::Pubkey,
-    sysvar, vote::{self, state::VoteAuthorize, instruction::authorize},
+    sysvar,
+    vote::{self, instruction::authorize, state::VoteAuthorize},
 };
 
 use crate::{
@@ -32,14 +33,13 @@ pub fn delist_validator(
     let storage_account_info = next_account_info(account_info_iter)?;
     let this_program_account_info = next_account_info(account_info_iter)?;
     let this_program_data_account_info = next_account_info(account_info_iter)?;
-    let current_upgrade_authority_info = next_account_info(account_info_iter)?;
     let pda_upgrade_authority_info = next_account_info(account_info_iter)?;
     let sysvar_clock_account_info = next_account_info(account_info_iter)?;
 
     log!(log_level, 2, "delist_validator: change_program_authority");
     change_program_authority(
         program_id,
-        current_upgrade_authority_info,
+        authorized_withdrawer_info,
         pda_upgrade_authority_info,
         this_program_account_info,
         this_program_data_account_info,
