@@ -3,7 +3,7 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     bpf_loader_upgradeable,
     entrypoint::ProgramResult,
-    program::invoke,
+    program::{invoke, invoke_signed},
     pubkey::Pubkey,
     rent::Rent,
     system_instruction, sysvar,
@@ -19,7 +19,7 @@ use crate::{
             PDA_AUTHORIZED_WITHDRAWER_SEED, PDA_UPGRADE_AUTHORITY_SEED, PROGRAM_STORAGE_SEED,
             STORAGE_VALIDATION_PHRASE,
         },
-        LogLevel, Storage, VoteState,
+        LogLevel, Storage,
     },
     utils::{get_clock_data_from_account, get_rent_data, AccountInfoHelpers, ResultExt},
 };
@@ -122,7 +122,7 @@ pub fn list_validator(
         &register_program_instruction(*authorized_withdrawer_info.key, *program_id),
         &registry_program_accounts,
     )?;
-
+    // panic!("need to panic");
     Ok(())
 }
 
@@ -139,7 +139,7 @@ pub fn create_storage_and_store_data<'a>(
     mediatable_date: u32,
     rent_data: Rent,
 ) -> ProgramResult {
-    storage_account
+    let (_storage_key, storage_account_bump) = storage_account
         .assert_seed(program_id, &[PROGRAM_STORAGE_SEED])
         .error_log("Error @ storage_account_info.assert_seed")?;
 
@@ -164,7 +164,7 @@ pub fn create_storage_and_store_data<'a>(
 
     let space = storage_data.get_space();
     let lamports = rent_data.minimum_balance(space);
-    invoke(
+    invoke_signed(
         &system_instruction::create_account(
             &payer_account.key,
             &storage_account.key,
@@ -173,6 +173,7 @@ pub fn create_storage_and_store_data<'a>(
             program_id,
         ),
         &[payer_account.clone(), storage_account.clone()],
+        &[&[PROGRAM_STORAGE_SEED, &[storage_account_bump]]],
     )
     .error_log("Error @ system_instruction::create_account")?;
 
@@ -196,9 +197,8 @@ pub fn verify_and_change_authorized_withdrawer<'a>(
     vote_account
         .assert_owner(&vote::program::ID)
         .error_log("vote_account must be owned by vote_program")?;
-    let vote_account_data = VoteState::deserialize(&vote_account.data.borrow());
     current_authorized_withdrawer
-        .assert_key_match(&vote_account_data.authorized_withdrawer)
+        .assert_key_match(&Pubkey::try_from(&vote_account.data.borrow()[36..68]).unwrap())
         .error_log("Error @ current_authorized_withdrawer.assert_key_match")?;
     sysvar_clock_account
         .assert_key_match(&sysvar::clock::id())

@@ -178,7 +178,7 @@ impl VoteState {
         Rent::get().unwrap().minimum_balance(Self::space())
     }
     pub fn deserialize(input: &[u8]) -> Box<Self> {
-        let collected = Box::new(deserialize::<VoteStateVersions>(input).unwrap());
+        let collected: Box<VoteStateVersions> = deserialize(&input[0..1000]).unwrap();
         collected.convert_to_current()
     }
 }
