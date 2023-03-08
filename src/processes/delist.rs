@@ -105,9 +105,8 @@ pub fn verify_and_close_storage<'a>(
 
     let storage_account_lamports = storage_account.lamports();
     **storage_account.lamports.borrow_mut() = 0;
-    **payer_account.lamports.borrow_mut() = payer_account
-        .lamports
-        .borrow()
+    let payer_starting_lamports = payer_account.lamports();
+    **payer_account.lamports.borrow_mut() = payer_starting_lamports
         .checked_add(storage_account_lamports)
         .error_log("Error adding storage lamports to payer")?;
     let mut storage_data = storage_account.data.borrow_mut();
