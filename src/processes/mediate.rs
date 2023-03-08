@@ -95,13 +95,13 @@ pub fn mediate(
 
     let to_buyer = escrow_account_info
         .lamports()
-        .checked_mul(mediation_shares.buyer)
+        .checked_mul(mediation_shares.buyer as u64)
         .error_log("buyer share * escrow lamports overflows")?
         .checked_div(100)
         .error_log("buyer share * escrow lamports overflows / 100")?;
     let to_seller = escrow_account_info
         .lamports()
-        .checked_mul(mediation_shares.seller)
+        .checked_mul(mediation_shares.seller as u64)
         .error_log("seller share * escrow lamports overflows")?
         .checked_div(100)
         .error_log("seller share * escrow lamports overflows / 100")?;

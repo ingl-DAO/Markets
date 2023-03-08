@@ -132,9 +132,9 @@ pub struct VoteInit {
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct MediationShares {
-    pub buyer: u64,
-    pub seller: u64,
-    pub team: u64,
+    pub buyer: u8,
+    pub seller: u8,
+    pub team: u8,
 }
 
 impl MediationShares {
