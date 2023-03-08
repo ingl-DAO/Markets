@@ -3,6 +3,7 @@ use solana_program::{
     bpf_loader_upgradeable,
     entrypoint::ProgramResult,
     program::invoke_signed,
+    program_error::ProgramError,
     pubkey::Pubkey,
     sysvar,
     vote::{self, instruction::authorize, state::VoteAuthorize},
@@ -45,27 +46,27 @@ pub fn delist_validator(
         this_program_data_account_info,
     )?;
 
-    log!(
-        log_level,
-        2,
-        "delist_validator: change_authorized_withdrawer"
-    );
-    change_authorized_withdrawer(
-        program_id,
-        vote_account_info,
-        authorized_withdrawer_info,
-        pda_authorized_withdrawer_info,
-        sysvar_clock_account_info,
-    )?;
-
     log!(log_level, 2, "delist_validator: closing storage");
-    verify_and_close_storage(
+    let is_sold = verify_and_close_storage(
         program_id,
         storage_account_info,
         authorized_withdrawer_info,
         vote_account_info,
     )?;
-
+    if !is_sold {
+        log!(
+            log_level,
+            2,
+            "delist_validator: change_authorized_withdrawer"
+        );
+        change_authorized_withdrawer(
+            program_id,
+            vote_account_info,
+            authorized_withdrawer_info,
+            pda_authorized_withdrawer_info,
+            sysvar_clock_account_info,
+        )?;
+    }
     Ok(())
 }
 
@@ -74,7 +75,7 @@ pub fn verify_and_close_storage<'a>(
     storage_account: &AccountInfo<'a>,
     payer_account: &AccountInfo<'a>,
     vote_account: &AccountInfo<'a>,
-) -> ProgramResult {
+) -> Result<bool, ProgramError> {
     storage_account
         .assert_seed(program_id, &[PROGRAM_STORAGE_SEED])
         .error_log("Error @ storage_account_info.assert_seed")?;
@@ -92,8 +93,9 @@ pub fn verify_and_close_storage<'a>(
     vote_account
         .assert_key_match(&storage_data.vote_account)
         .error_log("Error @ vote_account_info.assert_key_match")?;
-
+    let mut is_sold = false;
     if let Some(_purchase) = storage_data.purchase {
+        is_sold = true;
         for item in &storage_data.secondary_items {
             match item.date_validated {
                 None => Err(InglError::TooEarly
@@ -111,7 +113,7 @@ pub fn verify_and_close_storage<'a>(
         .error_log("Error adding storage lamports to payer")?;
     let mut storage_data = storage_account.data.borrow_mut();
     storage_data.fill(0);
-    Ok(())
+    Ok(is_sold)
 }
 
 pub fn change_authorized_withdrawer<'a>(

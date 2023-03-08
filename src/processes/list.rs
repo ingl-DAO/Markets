@@ -122,7 +122,6 @@ pub fn list_validator(
         &register_program_instruction(*authorized_withdrawer_info.key, *program_id),
         &registry_program_accounts,
     )?;
-    // panic!("need to panic");
     Ok(())
 }
 

@@ -34,6 +34,7 @@ pub fn buy_validator(
     let sysvar_clock_account_info = next_account_info(account_info_iter)?;
     let pda_authorized_withdrawer_info = next_account_info(account_info_iter)?;
     let escrow_account_info = next_account_info(account_info_iter)?;
+    let team_account_info = next_account_info(account_info_iter)?;
 
     let clock_data =
         get_clock_data_from_account(sysvar_clock_account_info).error_log("Error @ clock parse")?;
@@ -44,7 +45,7 @@ pub fn buy_validator(
         storage_account_info,
         registered_authorized_withdrawer_info,
         escrow_account_info,
-        vote_account_info,
+        team_account_info,
         &clock_data,
         log_level,
     )
