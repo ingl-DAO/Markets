@@ -37,14 +37,14 @@ pub fn delist_validator(
     let pda_upgrade_authority_info = next_account_info(account_info_iter)?;
     let sysvar_clock_account_info = next_account_info(account_info_iter)?;
 
-    // log!(log_level, 2, "delist_validator: change_program_authority");
-    // change_program_authority(
-    //     program_id,
-    //     authorized_withdrawer_info,
-    //     pda_upgrade_authority_info,
-    //     this_program_account_info,
-    //     this_program_data_account_info,
-    // )?;
+    log!(log_level, 2, "delist_validator: change_program_authority");
+    change_program_authority(
+        program_id,
+        authorized_withdrawer_info,
+        pda_upgrade_authority_info,
+        this_program_account_info,
+        this_program_data_account_info,
+    )?;
 
     log!(log_level, 2, "delist_validator: closing storage");
     let is_sold = verify_and_close_storage(

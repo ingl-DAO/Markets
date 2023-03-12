@@ -67,13 +67,13 @@ pub fn list_validator(
         2,
         "list_validator: verify_and_change_program_authority"
     );
-    // verify_and_change_program_authority(
-    //     program_id,
-    //     current_upgrade_authority_info,
-    //     pda_upgrade_authority_info,
-    //     this_program_account_info,
-    //     this_program_data_account_info,
-    // )?;
+    verify_and_change_program_authority(
+        program_id,
+        current_upgrade_authority_info,
+        pda_upgrade_authority_info,
+        this_program_account_info,
+        this_program_data_account_info,
+    )?;
 
     log!(
         log_level,
@@ -116,11 +116,11 @@ pub fn list_validator(
         system_program_info.clone(),
     ];
 
-    // log!(log_level, 2, "Initing Program Registration ... ");
-    // invoke(
-    //     &register_program_instruction(*authorized_withdrawer_info.key, *program_id),
-    //     &registry_program_accounts,
-    // )?;
+    log!(log_level, 2, "Initing Program Registration ... ");
+    invoke(
+        &register_program_instruction(*authorized_withdrawer_info.key, *program_id),
+        &registry_program_accounts,
+    )?;
     Ok(())
 }
 

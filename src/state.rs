@@ -6,7 +6,6 @@ use crate::{
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use ingl_macros::Validate;
-use serde::{Deserialize, Serialize};
 use solana_program::{
     account_info::AccountInfo, borsh::try_from_slice_unchecked, program_error::ProgramError,
     pubkey::Pubkey, rent::Rent, slot_history::Slot, stake_history::Epoch, sysvar::Sysvar,
