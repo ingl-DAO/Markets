@@ -2,7 +2,7 @@ use borsh::BorshSerialize;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    program::invoke,
+    program::invoke_signed,
     pubkey::Pubkey,
     system_instruction,
 };
@@ -36,7 +36,7 @@ pub fn validate_secondary_items_transfers(
     storage_account_info
         .assert_seed(program_id, &[PROGRAM_STORAGE_SEED])
         .error_log("Error @ storage account pda assertion")?;
-    escrow_account_info
+    let (_escrow_accout_key, escrow_pumb) = escrow_account_info
         .assert_seed(program_id, &[ESCROW_ACCOUNT_SEED])
         .error_log("Error @ escrow account pda assertion")?;
 
@@ -81,15 +81,16 @@ pub fn validate_secondary_items_transfers(
             .map(|item| item.cost)
             .sum::<u64>();
 
-        invoke(
+        invoke_signed(
             &system_instruction::transfer(
                 &escrow_account_info.key,
                 &buyer_account_info.key,
                 secondary_items_cost,
             ),
             &[escrow_account_info.clone(), buyer_account_info.clone()],
+            &[&[ESCROW_ACCOUNT_SEED, &[escrow_pumb]]],
         )?;
-        invoke(
+        invoke_signed(
             &system_instruction::transfer(
                 &escrow_account_info.key,
                 &authorized_withdrawer_info.key,
@@ -99,6 +100,7 @@ pub fn validate_secondary_items_transfers(
                 escrow_account_info.clone(),
                 authorized_withdrawer_info.clone(),
             ],
+            &[&[ESCROW_ACCOUNT_SEED, &[escrow_pumb]]],
         )?;
         storage_data
             .purchase
