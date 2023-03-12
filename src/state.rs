@@ -50,7 +50,7 @@ pub struct Storage {
     pub authorized_withdrawer: Pubkey,
     pub vote_account: Pubkey,
     pub authorized_withdrawer_cost: u64,
-    pub mediatable_date: u32,
+    pub mediation_interval: u32,
     pub purchase: Option<Purchase>,
     pub request_mediation_date: Option<u32>,
     pub mediation_date: Option<u32>,

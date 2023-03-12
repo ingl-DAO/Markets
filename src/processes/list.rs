@@ -21,7 +21,7 @@ use crate::{
         },
         LogLevel, Storage,
     },
-    utils::{get_clock_data_from_account, get_rent_data, AccountInfoHelpers, ResultExt},
+    utils::{get_rent_data, AccountInfoHelpers, ResultExt},
 };
 
 pub fn list_validator(
@@ -31,7 +31,7 @@ pub fn list_validator(
     secondary_items: Vec<SecondaryItem>,
     description: String,
     log_level: LogLevel,
-    mediatable_date: u32,
+    mediation_interval: u32,
     validator_name: String,
     validator_logo_url: String,
     rent_is_from_account: bool,
@@ -53,9 +53,8 @@ pub fn list_validator(
     let system_program_info = next_account_info(account_info_iter)?;
 
     let rent_data = get_rent_data(account_info_iter, rent_is_from_account)?;
-    let clock_data = get_clock_data_from_account(sysvar_clock_account_info)?;
 
-    if mediatable_date > (clock_data.unix_timestamp + 30 * 86400) as u32 {
+    if mediation_interval > 30 * 86400 as u32 {
         Err(InglError::TooLate.utilize("Mediatable date can't be more than 30 days in the future"))?
     }
 
@@ -104,7 +103,7 @@ pub fn list_validator(
         description,
         validator_name,
         validator_logo_url,
-        mediatable_date,
+        mediation_interval,
         rent_data,
     )?;
 
@@ -135,7 +134,7 @@ pub fn create_storage_and_store_data<'a>(
     description: String,
     validator_name: String,
     validator_logo_url: String,
-    mediatable_date: u32,
+    mediation_interval: u32,
     rent_data: Rent,
 ) -> ProgramResult {
     let (_storage_key, storage_account_bump) = storage_account
@@ -154,11 +153,11 @@ pub fn create_storage_and_store_data<'a>(
             .iter()
             .map(|item| item.to_stored())
             .collect(),
-        description: description,
-        validator_name: validator_name,
-        validator_logo_url: validator_logo_url,
+        description,
+        validator_name,
+        validator_logo_url,
         purchase: None,
-        mediatable_date,
+        mediation_interval,
     };
 
     let space = storage_data.get_space();

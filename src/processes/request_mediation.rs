@@ -40,8 +40,8 @@ pub fn request_mediation(
     {
         Err(InglError::NotAuthorized.utilize("Only the buyer or the seller can request mediation"))?
     }
-
-    if (clock_data.unix_timestamp as u32) < storage_data.mediatable_date {
+    let mediatable_date = purchase_data.date + storage_data.mediation_interval;
+    if (clock_data.unix_timestamp as u32) < mediatable_date {
         Err(InglError::TooEarly.utilize("Mediation cannot be requested yet"))?
     }
 
