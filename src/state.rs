@@ -4,7 +4,6 @@ use crate::{
     error::InglError,
     utils::{AccountInfoHelpers, ResultExt},
 };
-use bincode::deserialize;
 use borsh::{BorshDeserialize, BorshSerialize};
 use ingl_macros::Validate;
 use serde::{Deserialize, Serialize};
@@ -122,14 +121,6 @@ pub enum LogColors {
     Blank,
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize)]
-pub struct VoteInit {
-    pub node_pubkey: Pubkey,
-    pub authorized_voter: Pubkey,
-    pub authorized_withdrawer: Pubkey,
-    pub commission: u8,
-}
-
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct MediationShares {
     pub buyer: u8,
@@ -149,8 +140,9 @@ impl MediationShares {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(BorshDeserialize, Clone)]
 pub struct VoteState {
+    pub padding_for_borsh: [u8; 3],
     /// the node that votes in this account
     pub node_pubkey: Pubkey,
 
@@ -178,18 +170,12 @@ impl VoteState {
         Rent::get().unwrap().minimum_balance(Self::space())
     }
     pub fn deserialize(input: &[u8]) -> Box<Self> {
-        let collected: Box<VoteStateVersions> = deserialize(&input[0..1000]).unwrap();
+        let collected: Box<VoteStateVersions> = try_from_slice_unchecked(input).unwrap();
         collected.convert_to_current()
     }
 }
 
-pub type UnixTimestamp = i64;
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
-pub struct BlockTimestamp {
-    pub slot: Slot,
-    pub timestamp: UnixTimestamp,
-}
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, BorshDeserialize, PartialEq, Eq, Clone)]
 pub struct AuthorizedVoters {
     pub authorized_voters: BTreeMap<Epoch, Pubkey>,
 }
@@ -204,13 +190,13 @@ impl AuthorizedVoters {
     }
 }
 
-#[derive(Serialize, Default, Deserialize, Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Default, BorshDeserialize, Debug, PartialEq, Eq, Copy, Clone)]
 pub struct Lockout {
     pub slot: Slot,
     pub confirmation_count: u32,
 }
 
-#[derive(Deserialize)]
+#[derive(BorshDeserialize, Clone)]
 pub enum VoteStateVersions {
     V0_23_5(Box<VoteState0_23_5>),
     Current(Box<VoteState>),
@@ -224,6 +210,8 @@ impl VoteStateVersions {
                     AuthorizedVoters::new(state.authorized_voter_epoch, state.authorized_voter);
 
                 Box::new(VoteState {
+                    padding_for_borsh:[0,0,0],
+
                     node_pubkey: state.node_pubkey,
 
                     /// the signer for withdrawals
@@ -246,8 +234,9 @@ impl VoteStateVersions {
     }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, BorshDeserialize, PartialEq, Eq, Clone)]
 pub struct VoteState0_23_5 {
+    pub padding_for_borsh: [u8; 3],
     /// the node that votes in this account
     pub node_pubkey: Pubkey,
 
@@ -271,7 +260,7 @@ pub struct VoteState0_23_5 {
 pub type LogLevel = u8;
 
 const MAX_ITEMS: usize = 32;
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, BorshDeserialize, PartialEq, Eq, Clone)]
 pub struct CircBuf<I> {
     pub buf: [I; MAX_ITEMS],
     /// next pointer
@@ -294,33 +283,6 @@ impl<I> CircBuf<I> {
 
         self.buf[self.idx] = item;
     }
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, Copy)]
-pub enum UpgradeableLoaderState {
-    /// Account is not initialized.
-    Uninitialized,
-    /// A Buffer account.
-    Buffer {
-        /// Authority address
-        authority_address: Option<Pubkey>,
-        // The raw program data follows this serialized structure in the
-        // account's data.
-    },
-    /// An Program account.
-    Program {
-        /// Address of the ProgramData account.
-        programdata_address: Pubkey,
-    },
-    // A ProgramData account.
-    ProgramData {
-        /// Slot that the program was last modified.
-        slot: u64,
-        /// Address of the Program's upgrade authority.
-        upgrade_authority_address: Option<Pubkey>, // TODO: Check that the upgrade_authority_address is a signer during intialization.
-                                                   // The raw program data follows this serialized structure in the
-                                                   // account's data.
-    },
 }
 
 #[cfg(test)]
